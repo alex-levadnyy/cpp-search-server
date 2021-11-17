@@ -18,6 +18,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <numeric>
 
 using namespace std;
 
@@ -95,8 +96,8 @@ public:
 
     //шаблонная функция обработки поискового запроса для формирования Top MAX_RESULT_DOCUMENT_COUNT документов
 
-    template <typename FuncPredicate>
-    vector<Document> FindTopDocuments(const string& raw_query, FuncPredicate predicate) const {
+    template <typename Predicate>
+    vector<Document> FindTopDocuments(const string& raw_query, Predicate predicate) const {
         const Query query = ParseQuery(raw_query);
         auto matched_documents = FindAllDocuments(query, predicate);
 
@@ -117,7 +118,9 @@ public:
 
     vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus status = DocumentStatus::ACTUAL) const {
 
-        auto matched_documents = FindTopDocuments(raw_query, [status](int document_id, DocumentStatus status_, int rating) { return status_ == status; });
+        auto matched_documents = FindTopDocuments(raw_query, [status](int document_id, DocumentStatus status_, int rating) {
+            return status_ == status; 
+            });
         return matched_documents;
     }
 
@@ -176,10 +179,7 @@ private:
         if (ratings.empty()) {
             return 0;
         }
-        int rating_sum = 0;
-        for (const int rating : ratings) {
-            rating_sum += rating;
-        }
+        int rating_sum = accumulate(ratings.begin(), ratings.end(), 0);
         return rating_sum / static_cast<int>(ratings.size());
     }
 
@@ -228,8 +228,9 @@ private:
     double ComputeWordInverseDocumentFreq(const string& word) const {
         return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
     }
-    template <typename FuncPredicate>
-    vector<Document> FindAllDocuments(const Query& query, FuncPredicate status) const {
+
+    template <typename Predicate>
+    vector<Document> FindAllDocuments(const Query& query, Predicate predicate) const {
         map<int, double> document_to_relevance;
         for (const string& word : query.plus_words) {
             if (word_to_document_freqs_.count(word) == 0) {
@@ -237,7 +238,8 @@ private:
             }
             const double inverse_document_freq = ComputeWordInverseDocumentFreq(word);
             for (const auto [document_id, term_freq] : word_to_document_freqs_.at(word)) {
-                if (status(document_id, documents_.at(document_id).status, documents_.at(document_id).rating)) {
+                const auto& num_document = documents_.at(document_id);
+                if (predicate(document_id, num_document.status, num_document.rating)) {
                     document_to_relevance[document_id] += term_freq * inverse_document_freq;
                 }
             }
