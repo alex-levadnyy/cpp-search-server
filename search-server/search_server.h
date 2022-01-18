@@ -65,8 +65,6 @@ public:
 
     int GetDocumentCount() const;
 
-    //int GetDocumentId(int index) const;
-
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query, int document_id) const;
 
     std::set<int>::const_iterator begin() const;
