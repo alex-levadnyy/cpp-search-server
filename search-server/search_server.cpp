@@ -150,14 +150,9 @@ void SearchServer::RemoveDocument(int document_id) {
         document_ids_.erase(document_id);
         id_word_to_freq.erase(document_id);
     }
-    for (auto& map_words : word_to_document_freqs_) {
-        for (auto it = map_words.second.begin(); it != map_words.second.end();) {
-            if (it->first == document_id) {
-                it = map_words.second.erase(it);
-            }
-            else {
-                ++it;
-            }                    
+    for (auto& [_, map_for_delete] : word_to_document_freqs_) {
+        if (map_for_delete.count(document_id)) {
+            map_for_delete.erase(document_id);
         }
     }
 }
