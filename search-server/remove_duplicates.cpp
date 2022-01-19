@@ -1,8 +1,8 @@
 #include "remove_duplicates.h"
+#include <iostream>
 #include <string>
 #include <vector>
 #include <set>
-#include <iostream>
 
 using namespace std::literals;
 
@@ -15,17 +15,12 @@ void RemoveDuplicates(SearchServer& search_server) {
 		for (const auto& word : id_word_freq) {
 			temp.push_back(word.first);
 		}
-		if (word_doc.empty()) {
-			word_doc.insert(temp);
+		if (word_doc.count(temp)) {
+			id_document_for_delete.push_back(id_document);
 		}
 		else {
-			size_t size_befor_add = word_doc.size();
 			word_doc.insert(temp);
-			if (size_befor_add == word_doc.size()) {
-				id_document_for_delete.push_back(id_document);
-			}
 		}
-		temp.clear();
 	}
 	for (int i = 0; i != id_document_for_delete.size(); ++i) {
 		search_server.RemoveDocument(id_document_for_delete[i]);
