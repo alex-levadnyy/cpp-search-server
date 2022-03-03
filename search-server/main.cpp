@@ -1,4 +1,8 @@
 /*Программа представляет собой прототип поисковой системы.
+* ver. 0.4.0
+* - добавлены паралленльные версии методов FindTopDocuments, FindAllDocuments, RemoveDocument
+* - добавлено использование string_view
+*
 * ver. 0.3.1
 * - добавлен метод class SearchServer - GetWordFrequencies : определяет частоту слова в документе
 * - добавлен метод class SearchServer - RemoveDocument : удаляет дубликаты документов
@@ -8,32 +12,32 @@
             log_duration.h              - определение времени работы
             remove_duplicates.h         - функция поиска и удаления дубликатов документов
             test_example_functions.h    - тестирование функционала
-* 
+*
 * ver. 0.3.0
 * - написан class RequestQueue: обработка запросов на которые ничего не нашлось
 * - написан class Paginator: для постраничного вывода результата поиска
 * - проект разбит на файлы:
-*			document.h					- печать документовmain.cpp
-			paginator.h					- вывод результатов по страницамread_input_functions.cpp
-			read_input_functions.h		- чтение данных из командной строкиrequest_queue.cpp
-			request_queue.h				- обработка запросов на которые ничего не нашлосьsearch_server.cpp
-			search_server.h				- основной функционал поисковой системыstring_processing.cpp
-			string_processing.h			- работа со строками
-* 
+*	    document.h				- печать документовmain.cpp
+            paginator.h				- вывод результатов по страницамread_input_functions.cpp
+            read_input_functions.h		- чтение данных из командной строкиrequest_queue.cpp
+            request_queue.h			- обработка запросов на которые ничего не нашлосьsearch_server.cpp
+            search_server.h			- основной функционал поисковой системыstring_processing.cpp
+            string_processing.h			- работа со строками
+*
 * ver. 0.2.1
 * - функции SplitIntoWordsNoStop и ParseQuery возвращают результат
 * - выброс исключений происходит в обрабатывающих функциях
 * - более подробная информация о причинах срабатывания исключений
-* 
+*
 * ver. 0.2.0
 * - Добавлена обработка ошибок:
 *       + исключается добавление документов со специсимволами
 *       + исключается добавление документов с одинковым или отрицательным ID
 *       + исключается обработка поисковых запросов со спецсимволами,
 *            '--' перед словом, '-' без слова после
-*       
-* 
-* 
+*
+*
+*
 * ver. 0.1.0
 * Реализован class SearchServer.
 * FindTopDocuments - метод для поиска по покуметам с необходимыми критериями.
@@ -44,55 +48,92 @@
 *       - минус-слова, поисковый запрос, предикат
 * Вычисляет рейтинг документа, TF-IDF
 * Выводит количество документов определенное const  MAX_RESULT_DOCUMENT_COUNT
-* 
+*
 * Старт обучения 01.11.2021 ЯПрактикум
 */
 
 
-#include "document.h"
-#include "paginator.h"
-#include "read_input_functions.h"
-#include "request_queue.h"
-#include "string_processing.h"
-#include "log_duration.h"
-#include "remove_duplicates.h"
-#include "test_example_functions.h"
 #include "search_server.h"
+#include "process_queries.h"
+
+#include <execution>
 #include <iostream>
+#include <random>
+#include <string>
 #include <vector>
 
 using namespace std;
 
+string GenerateWord(mt19937& generator, int max_length) {
+    const int length = uniform_int_distribution(1, max_length)(generator);
+    std::uniform_int_distribution<int> distribution('a', 'z');
+    std::string word(length, ' ');
+    for (char& c : word) {
+        c = char(distribution(generator));
+    }
+    return word;
+}
+
+vector<string> GenerateDictionary(mt19937& generator, int word_count, int max_length) {
+    vector<string> words;
+    words.reserve(word_count);
+    for (int i = 0; i < word_count; ++i) {
+        words.push_back(GenerateWord(generator, max_length));
+    }
+    words.erase(unique(words.begin(), words.end()), words.end());
+    return words;
+}
+
+string GenerateQuery(mt19937& generator, const vector<string>& dictionary, int word_count, double minus_prob = 0) {
+    string query;
+    for (int i = 0; i < word_count; ++i) {
+        if (!query.empty()) {
+            query.push_back(' ');
+        }
+        if (uniform_real_distribution<>(0, 1)(generator) < minus_prob) {
+            query.push_back('-');
+        }
+        query += dictionary[uniform_int_distribution<int>(0, dictionary.size() - 1)(generator)];
+    }
+    return query;
+}
+
+vector<string> GenerateQueries(mt19937& generator, const vector<string>& dictionary, int query_count, int max_word_count) {
+    vector<string> queries;
+    queries.reserve(query_count);
+    for (int i = 0; i < query_count; ++i) {
+        queries.push_back(GenerateQuery(generator, dictionary, max_word_count));
+    }
+    return queries;
+}
+
+template <typename ExecutionPolicy>
+void Test(string_view mark, const SearchServer& search_server, const vector<string>& queries, ExecutionPolicy&& policy) {
+    LOG_DURATION(mark);
+    double total_relevance = 0;
+    for (const string_view query : queries) {
+        for (const auto& document : search_server.FindTopDocuments(policy, query)) {
+            total_relevance += document.relevance;
+        }
+    }
+    cout << total_relevance << endl;
+}
+
+#define TEST(policy) Test(#policy, search_server, queries, execution::policy)
+
 int main() {
-    SearchServer search_server("and with"s);
+    mt19937 generator;
 
-    AddDocument(search_server, 1, "funny pet and nasty rat"s, DocumentStatus::ACTUAL, { 7, 2, 7 });
-    AddDocument(search_server, 2, "funny pet with curly hair"s, DocumentStatus::ACTUAL, { 1, 2 });
+    const auto dictionary = GenerateDictionary(generator, 1000, 10);
+    const auto documents = GenerateQueries(generator, dictionary, 10'000, 70);
 
-    // дубликат документа 2, будет удалён
-    AddDocument(search_server, 3, "funny pet with curly hair"s, DocumentStatus::ACTUAL, { 1, 2 });
+    SearchServer search_server(dictionary[0]);
+    for (size_t i = 0; i < documents.size(); ++i) {
+        search_server.AddDocument(i, documents[i], DocumentStatus::ACTUAL, { 1, 2, 3 });
+    }
 
-    // отличие только в стоп-словах, считаем дубликатом
-    AddDocument(search_server, 4, "funny pet and curly hair"s, DocumentStatus::ACTUAL, { 1, 2 });
+    const auto queries = GenerateQueries(generator, dictionary, 100, 70);
 
-    // множество слов такое же, считаем дубликатом документа 1
-    AddDocument(search_server, 5, "funny funny pet and nasty nasty rat"s, DocumentStatus::ACTUAL, { 1, 2 });
-
-    // добавились новые слова, дубликатом не является
-    AddDocument(search_server, 6, "funny pet and not very nasty rat"s, DocumentStatus::ACTUAL, { 1, 2 });
-
-    // множество слов такое же, как в id 6, несмотря на другой порядок, считаем дубликатом
-    AddDocument(search_server, 7, "very nasty rat and not very funny pet"s, DocumentStatus::ACTUAL, { 1, 2 });
-
-    // есть не все слова, не является дубликатом
-    AddDocument(search_server, 8, "pet with rat and rat and rat"s, DocumentStatus::ACTUAL, { 1, 2 });
-
-    // слова из разных документов, не является дубликатом
-    AddDocument(search_server, 9, "nasty rat with curly hair"s, DocumentStatus::ACTUAL, { 1, 2 });
-
-    cout << "Before duplicates removed: "s << search_server.GetDocumentCount() << endl;
-    RemoveDuplicates(search_server);
-    cout << "After duplicates removed: "s << search_server.GetDocumentCount() << endl;
-
-    return 0;
+    TEST(seq);
+    TEST(par);
 }
