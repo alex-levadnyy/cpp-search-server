@@ -8,14 +8,14 @@ void AddDocument(SearchServer& search_server, int document_id, const std::string
         search_server.AddDocument(document_id, document, status, ratings);
     }
     catch (const std::exception& e) {
-        std::cout << "Œ¯Ë·Í‡ ‰Ó·‡‚ÎÂÌËˇ ‰ÓÍÛÏÂÌÚ‡ "s << document_id << ": "s << e.what() << std::endl;
+        std::cout << "–û—à–∏–±–∫–∞ –¥–æ–±–∞–≤–ª–µ–Ω–∏—è –¥–æ–∫—É–º–µ–Ω—Ç–∞ "s << document_id << ": "s << e.what() << std::endl;
     }
 }
 
 void FindTopDocuments(const SearchServer& search_server, const std::string& raw_query) {
     using namespace std::literals;
 
-    std::cout << "–ÂÁÛÎ¸Ú‡Ú˚ ÔÓËÒÍ‡ ÔÓ Á‡ÔÓÒÛ: "s << raw_query << std::endl;
+    std::cout << "–†–µ–∑—É–ª—å—Ç–∞—Ç—ã –ø–æ–∏—Å–∫–∞ –ø–æ –∑–∞–ø—Ä–æ—Å—É: "s << raw_query << std::endl;
 
     try {
         for (const Document& document : search_server.FindTopDocuments(raw_query)) {
@@ -23,7 +23,7 @@ void FindTopDocuments(const SearchServer& search_server, const std::string& raw_
         }
     }
     catch (const std::exception& e) {
-        std::cout << "Œ¯Ë·Í‡ ÔÓËÒÍ‡: "s << e.what() << std::endl;
+        std::cout << "–û—à–∏–±–∫–∞ –ø–æ–∏—Å–∫–∞: "s << e.what() << std::endl;
     }
 }
 
@@ -31,7 +31,7 @@ void MatchDocuments(const SearchServer& search_server, const std::string& query)
     using namespace std::literals;
 
     try {
-        std::cout << "Ã‡Ú˜ËÌ„ ‰ÓÍÛÏÂÌÚÓ‚ ÔÓ Á‡ÔÓÒÛ: "s << query << std::endl;
+        std::cout << "–ú–∞—Ç—á–∏–Ω–≥ –¥–æ–∫—É–º–µ–Ω—Ç–æ–≤ –ø–æ –∑–∞–ø—Ä–æ—Å—É: "s << query << std::endl;
         //const int document_count = search_server.GetDocumentCount();
         for (const int document_id : search_server) {
         //for (int index = 0; index < document_count; ++index) {
@@ -41,7 +41,7 @@ void MatchDocuments(const SearchServer& search_server, const std::string& query)
         }
     }
     catch (const std::exception& e) {
-        std::cout << "Œ¯Ë·Í‡ Ï‡Ú˜ËÌ„‡ ‰ÓÍÛÏÂÌÚÓ‚ Ì‡ Á‡ÔÓÒ "s << query << ": "s << e.what() << std::endl;
+        std::cout << "–û—à–∏–±–∫–∞ –º–∞—Ç—á–∏–Ω–≥–∞ –¥–æ–∫—É–º–µ–Ω—Ç–æ–≤ –Ω–∞ –∑–∞–ø—Ä–æ—Å "s << query << ": "s << e.what() << std::endl;
     }
 }
 
@@ -49,10 +49,10 @@ void TestSearchServer() {
     using namespace std::literals;
 
     try {
-        std::vector <std::string> s1 = { "Ë"s, "‚"s, "Ì‡\x12"s };
+        std::vector <std::string> s1 = { "–∏"s, "–≤"s, "–Ω–∞\x12"s };
         SearchServer search_server1(s1);
     }
     catch (const std::exception& e) {
-        std::cout << "Œ¯Ë·Í‡ Á‡‰‡ÌËˇ ÒÚÓÔ-ÒÎÓ‚ : "s << e.what() << std::endl;
+        std::cout << "–û—à–∏–±–∫–∞ –∑–∞–¥–∞–Ω–∏—è —Å—Ç–æ–ø-—Å–ª–æ–≤ : "s << e.what() << std::endl;
     }
 }
