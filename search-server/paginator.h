@@ -44,7 +44,7 @@ template <typename Iterator>
 class Paginator {
 public:
     Paginator(Iterator begin, Iterator end, size_t page_size) {
-        using std::string_literals::operator""s;
+        using namespace std::literals;
         assert(end >= begin && page_size > 0 && "Validation Iterator end, begin and  page_size"s);
         for (size_t left = distance(begin, end); left > 0;) {
             const size_t current_page_size = std::min(page_size, left);

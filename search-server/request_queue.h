@@ -32,7 +32,7 @@ public:
 private:
     struct QueryResult {
         uint64_t timestamp;
-        int results;
+        size_t results;
     };
     std::deque<QueryResult> requests_;
     const SearchServer& search_server_;
@@ -40,5 +40,5 @@ private:
     uint64_t current_time_;
     const static int sec_in_day_ = 1440;
 
-    void AddRequest(int results_num);
+    void AddRequest(size_t results_num);
 };

@@ -10,7 +10,7 @@ int RequestQueue::GetNoResultRequests() const {
     return no_results_requests_;
 }
 
-void RequestQueue::AddRequest(int results_num) {
+void RequestQueue::AddRequest(size_t results_num) {
     ++current_time_;
     while (!requests_.empty() && sec_in_day_ <= current_time_ - requests_.front().timestamp) {
         if (0 == requests_.front().results) {

@@ -1,29 +1,31 @@
-#include "remove_duplicates.h"
-#include <iostream>
-#include <string>
-#include <vector>
 #include <set>
+#include <vector>
 
-using namespace std::literals;
+#include "remove_duplicates.h"
+
+using namespace std;
 
 void RemoveDuplicates(SearchServer& search_server) {
-	std::vector<int> id_document_for_delete;
-	std::set<std::vector<std::string>> word_doc;
-	for (int id_document : search_server) {
-		const auto& id_word_freq = search_server.GetWordFrequencies(id_document);
-		std::vector<std::string> temp;
-		for (const auto& word : id_word_freq) {
-			temp.push_back(word.first);
-		}
-		if (word_doc.count(temp)) {
-			id_document_for_delete.push_back(id_document);
-		}
-		else {
-			word_doc.insert(temp);
-		}
-	}
-	for (int i = 0; i != id_document_for_delete.size(); ++i) {
-		search_server.RemoveDocument(id_document_for_delete[i]);
-		std::cout << "Found duplicate document id "s << id_document_for_delete[i] << std::endl;
-	}
+    set<set<string_view, std::less<>>> unique_docs;
+    vector<int> docs_to_delete;
+    for (const int id : search_server) {
+        const map<string_view, double> word_freqs = search_server.GetWordFrequencies(id);
+        set<string_view, std::less<>> words;
+        transform(word_freqs.begin(), word_freqs.end(), inserter(words, words.begin()),
+            [](const pair<string_view, double> word) {
+                return word.first;
+            });
+
+        if (unique_docs.count(words) == 0) {
+            unique_docs.insert(words);
+        }
+        else {
+            docs_to_delete.push_back(id);
+        }
+    }
+
+    for (const int id : docs_to_delete) {
+        cout << "Found duplicate document id " + to_string(id) << "\n";
+        search_server.RemoveDocument(id);
+    }
 }
