@@ -111,7 +111,7 @@ int main() {
         // разбиваем результат поиска на страницы
         size_t page_size = 2;
         const auto pages = Paginate(search_results, page_size);
-        for (auto page : pages) {
+        for (auto &page : pages) {
             cout << page << endl;
             cout << "Page break"s << endl;
         }

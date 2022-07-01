@@ -28,13 +28,11 @@ public:
     explicit SearchServer(const StringContainer& stop_words)
     : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
     using namespace std::string_literals;
-    if (!all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
-        throw std::invalid_argument("Some of stop words are invalid"s);
+        if (!all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
+            throw std::invalid_argument("Some of stop words are invalid"s);
+        }
     }
-}
 
-   // explicit SearchServer(const std::string& stop_words_text);
-   // explicit SearchServer(const std::string_view stop_words_text);
     
     explicit SearchServer(std::string stop_words_text)
         : SearchServer(std::string_view(stop_words_text)) {
@@ -77,9 +75,16 @@ public:
         return document_ids_.cend();
     }
 
-    std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::string_view raw_query, int document_id) const;
-    std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::execution::parallel_policy&, const std::string_view raw_query, int document_id) const;
-    std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::execution::sequenced_policy&, const std::string_view raw_query, int document_id) const;
+    std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::string_view raw_query, 
+                                                                            int document_id) const;
+
+    std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::execution::parallel_policy&, 
+                                                                            const std::string_view raw_query, 
+                                                                            int document_id) const;
+
+    std::tuple<std::vector<std::string_view>, DocumentStatus> MatchDocument(const std::execution::sequenced_policy&, 
+                                                                            const std::string_view raw_query, 
+                                                                            int document_id) const;
       
 
 
@@ -90,9 +95,7 @@ private:
         DocumentStatus status;
         std::string text;
     };
-    //const std::set<std::string> stop_words_;
     const std::set<std::string, std::less<>> stop_words_;
-   // std::unordered_set<std::string> all_words;
 
     std::map<std::string_view, std::map<int, double>> word_to_document_freqs_;
     std::map<int, std::map<std::string_view, double>> document_to_word_freqs_;
@@ -114,13 +117,8 @@ private:
         bool is_stop;
     };
 
-    //QueryWord ParseQueryWord(const std::string& text) const;
     QueryWord ParseQueryWord(std::string_view text) const;
 
-    //    struct Query {
-    //        std::set<std::string> plus_words;
-    //        std::set<std::string> minus_words;
-    //    };
     struct Query {
         std::vector<std::string_view> plus_words;
         std::vector<std::string_view> minus_words;
