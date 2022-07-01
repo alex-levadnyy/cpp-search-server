@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.11)
 project(SearchServer CXX)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -29,9 +29,7 @@ set (search_server
     "search-server/string_processing.cpp"
     )
 
-add_executable(SearchServer search-server/main.cpp ${search_server} ${test_utils} ${search_server_tests})
-
-target_link_libraries(SearchServer PRIVATE -ltbb -lpthread)
+add_executable(SearchServer search-server/main.cpp ${search_server})
 
 target_include_directories(SearchServer PRIVATE "search-server")
 
